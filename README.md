@@ -1,4 +1,4 @@
-# ml-project-drebin-fe
+#  Project for the ML course (A.Y. 2021/2022)
 
 ## Objective
 Build a complete ML-based Android malware detection system, that: 
