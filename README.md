@@ -5,8 +5,8 @@ Build a complete ML-based Android malware detection system, that:
 - Takes as input a training set of apks
 - Extracts features from them
 - Trains and saves a classifier and the selected features
-- Extracts features from test apks, load the saved model and classifies them
-- Finally, report metrics (e.g. accuracy, ROC curve) to evaluate the performance of the system.
+- Extracts features from test apks, loads the saved model and classifies them
+- Finally, reports metrics (e.g. accuracy, ROC curve) to evaluate the performance of the system.
 
 ### Dataset 
 You can download some apks from [here](https://drive.google.com/drive/folders/1-Lc3_8w6KDLPEK4Tuv1kXIKVAfn8P0lf?usp=sharing)

@@ -42,7 +42,6 @@ import settings
 
 # global variables
 CC = ''.join(map(unichr, range(0, 32) + range(127, 160)))
-sha = None
 
 
 #########################################################################################
@@ -652,7 +651,7 @@ def unpackSample(tmpDir, sampleFile):
 
 
 # create JSON file
-def createOutput(workingDir, appProviders, appPermissions,
+def createOutput(workingDir, sampleFile, appProviders, appPermissions,
                  appIntents, servicesANDreceiver,
                  dangerousCalls, appUrls, apiPermissions, apiCalls,
                  appActivities):
@@ -673,6 +672,7 @@ def createOutput(workingDir, appProviders, appPermissions,
     if not os.path.exists(os.path.join(workingDir, 'results')):
         os.mkdir(os.path.join(workingDir, 'results'))
 
+    sha = sampleFile.split(".")[0]
     run_id = '{}drebin-{}@{}'.format(sha, str(uuid.uuid4())[:6],
                                      datetime.datetime.utcnow().strftime(
                                          '%Y-%m-%dT%H:%M:%SZ'))
@@ -688,7 +688,6 @@ def createOutput(workingDir, appProviders, appPermissions,
 
 
 def report_to_feature_vector(report):
-    output = {'sha256': report['sha256']}
 
     def key_fmt(k, val):
         return '{}::{}'.format(k, val.strip()).replace('.', '_')
@@ -770,7 +769,7 @@ def run(sampleFile, workingDir):
         # print "create json report..."
         shutil.rmtree(smaliLocation)
 
-    createOutput(workingDir, appProviders, appPermissions,
+    createOutput(workingDir, sampleFile, appProviders, appPermissions,
                  appIntents, servicesANDreceiver,
                  dangerousCalls, appUrls, apiPermissions,
                  apiCalls, appActivities)
