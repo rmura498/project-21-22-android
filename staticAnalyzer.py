@@ -41,7 +41,7 @@ import ssdeep
 import settings
 
 # global variables
-CC = ''.join(map(unichr, range(0, 32) + range(127, 160)))
+CC = ''.join(map(chr, list(range(0, 32)) + list(range(127, 160))))
 
 
 #########################################################################################
@@ -156,9 +156,9 @@ def getActivities(sampleFile):
                                 stdout=subprocess.PIPE,
                                 stdin=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
-    manifest = manifest.communicate(0)[0].split("\n")
+    manifest = manifest.communicate(0)[0].split("\n".encode())
     for line in manifest:
-        if "activity" in line:
+        if "activity".encode() in line:
             try:
                 activity = line.split("'")[1].split(".")[-1]
                 activity = re.compile('[%s]' % re.escape(CC)).sub('', activity)
@@ -176,9 +176,9 @@ def getActivities(sampleFile):
         stdout=subprocess.PIPE,
         stdin=subprocess.PIPE,
         stderr=subprocess.PIPE)
-    manifest = manifest.communicate(0)[0].split("\n")
+    manifest = manifest.communicate(0)[0].split("\n".encode())
     for i, line in enumerate(manifest):
-        if "activity" in line:
+        if "activity".encode() in line:
             try:
                 if 'Raw' not in manifest[i + 1]:
                     nextLine = manifest[i + 2].split("=")[1].split('"')[1]
@@ -207,10 +207,10 @@ def getIntents(logFile, sampleFile):
         stdout=subprocess.PIPE,
         stdin=subprocess.PIPE,
         stderr=subprocess.PIPE)
-    xml = xml.communicate(0)[0].split("\n")
+    xml = xml.communicate(0)[0].split("\n".encode())
     i = 0
     for line in xml:
-        if "intent" in line:
+        if "intent".encode() in line:
             try:
                 intents = line.split("=")[1].split("\"")[1]
                 intents = re.compile('[%s]' % re.escape(CC)).sub('', intents)
@@ -234,7 +234,7 @@ def getPermissions(logFile, sampleFile):
         stderr=subprocess.PIPE)
     # print 'into permissions'
     # print permissions.communicate(0)
-    permissions = permissions.communicate(0)[0].split("uses-permission: ")
+    permissions = permissions.communicate(0)[0].split("uses-permission: ".encode())
     log(logFile, 0, "granted permissions", 0)
     i = 1
     while i < len(permissions):
@@ -257,9 +257,9 @@ def getProviders(logFile, sampleFile):
         stdout=subprocess.PIPE,
         stdin=subprocess.PIPE,
         stderr=subprocess.PIPE)
-    xml = xml.communicate(0)[0].split("\n")
+    xml = xml.communicate(0)[0].split("\n".encode())
     for line in xml:
-        if "provider" in line:
+        if "provider".encode() in line:
             try:
                 provider = line.split("=")[1].split("\"")[1]
                 provider = re.compile('[%s]' % re.escape(CC)).sub('', provider)
@@ -282,9 +282,9 @@ def getServicesReceivers(logFile, sampleFile):
         stdout=subprocess.PIPE,
         stdin=subprocess.PIPE,
         stderr=subprocess.PIPE)
-    manifest = manifest.communicate(0)[0].split("\n")
+    manifest = manifest.communicate(0)[0].split("\n".encode())
     for i, line in enumerate(manifest):
-        if "service" in line:
+        if "service".encode() in line:
             try:
                 nextLine = manifest[i + 1].split("=")[1].split('"')[1]
                 nextLine = re.compile('[%s]' % re.escape(CC)).sub('', nextLine)
@@ -297,7 +297,7 @@ def getServicesReceivers(logFile, sampleFile):
         else:
             continue
     for i, line in enumerate(manifest):
-        if "receiver" in line:
+        if "receiver".encode() in line:
             try:
                 nextLine = manifest[i + 1].split("=")[1].split('"')[1]
                 nextLine = re.compile('[%s]' % re.escape(CC)).sub('', nextLine)
@@ -329,7 +329,7 @@ def parseSmaliCalls(logFile, smaliLocation):
             i = 0
             for line in smaliFile:
                 i += 1
-                if "Cipher" in line:
+                if "Cipher".encode() in line:
                     try:
                         prevLine = \
                             smaliFile[smaliFile.index(line) - 2].split("\n")[
@@ -343,7 +343,7 @@ def parseSmaliCalls(logFile, smaliLocation):
                     except:
                         continue
                 # only for logging !
-                if "crypto" in line:
+                if "crypto".encode() in line:
                     try:
                         line = line.split("\n")[0]
                         log(logFile, file + ":" + str(i), line, 1)
@@ -686,11 +686,11 @@ def createOutput(workingDir, sampleFile, appProviders, appPermissions,
     jsonFile.close()
     return output
 
+def key_fmt(k, val):
+    return '{}::{}'.format(k, val.strip()).replace('.', '_')
 
 def report_to_feature_vector(report):
-
-    def key_fmt(k, val):
-        return '{}::{}'.format(k, val.strip()).replace('.', '_')
+    output = dict()
 
     for k, values in report.items():
         # TODO | Find out what keywords_mapping is
