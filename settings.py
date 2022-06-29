@@ -37,3 +37,4 @@ AAPT = "/usr/bin/aapt"  # location of the aapt binary
 APICALLS = "APIcalls.txt"
 BACKSMALI = "baksmali-2.0.3.jar"  # location of the baksmali.jar file
 MODELS = "models/"
+DATASET = "dataset/"

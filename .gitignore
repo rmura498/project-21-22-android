@@ -3,6 +3,9 @@
 results/
 unpack/
 
+#Data folder
+/dataset/
+
 # Logging files
 *.log
 
@@ -145,4 +148,5 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
 
