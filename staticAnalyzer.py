@@ -212,7 +212,7 @@ def getIntents(logFile, sampleFile):
     for line in xml:
         if "intent".encode() in line:
             try:
-                intents = line.split("=")[1].split("\"")[1]
+                intents = line.split("=")[1].split("\"".encode())[1]
                 intents = re.compile('[%s]' % re.escape(CC)).sub('', intents)
                 log(logFile, "AndroidManifest", intents, 1)
                 appIntents.append(intents.encode('ascii', 'replace'))
@@ -238,8 +238,8 @@ def getPermissions(logFile, sampleFile):
     log(logFile, 0, "granted permissions", 0)
     i = 1
     while i < len(permissions):
-        permission = permissions[i].split("\n")[0]
-        permission = re.compile('[%s]' % re.escape(CC)).sub('', permission)
+        permission = permissions[i].split("\n".encode())[0]
+        permission = re.compile('[%s]' % re.escape(CC)).sub('', permission.decode())
         log(logFile, "Permission:", permission, 1)
         i += 1
         if permission != "":
@@ -643,9 +643,11 @@ def parseSmaliURL(logFile, smaliLocation):
 
 
 # unpack the sample apk-file
+# TODO: try to fix some unzip problems on goodware apk files
 def unpackSample(tmpDir, sampleFile):
     unpackLocation = tmpDir + "unpack"
-    os.mkdir(unpackLocation)
+    if not os.path.exists(unpackLocation):
+        os.mkdir(unpackLocation)
     os.system("unzip " + "-o -q -d " + unpackLocation + " " + sampleFile)
     return unpackLocation
 
@@ -672,7 +674,8 @@ def createOutput(workingDir, sampleFile, appProviders, appPermissions,
     if not os.path.exists(os.path.join(workingDir, 'results')):
         os.mkdir(os.path.join(workingDir, 'results'))
 
-    sha = sampleFile.split(".")[0]
+    name = sampleFile.split("/")[2]
+    sha = name.split(".")[0]
     run_id = '{}drebin-{}@{}'.format(sha, str(uuid.uuid4())[:6],
                                      datetime.datetime.utcnow().strftime(
                                          '%Y-%m-%dT%H:%M:%SZ'))

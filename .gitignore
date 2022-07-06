@@ -3,6 +3,10 @@
 results/
 unpack/
 
+#Data folder
+/dataset/
+/static_work_dir/
+
 # Logging files
 *.log
 
