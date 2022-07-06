@@ -643,6 +643,7 @@ def parseSmaliURL(logFile, smaliLocation):
 
 
 # unpack the sample apk-file
+# TODO: try to fix some unzip problems on goodware apk files
 def unpackSample(tmpDir, sampleFile):
     unpackLocation = tmpDir + "unpack"
     if not os.path.exists(unpackLocation):

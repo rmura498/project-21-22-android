@@ -30,11 +30,17 @@
 # MSAPIKEY = ''  # API key for the aforementioned user
 # important files and folders
 # TMPDIR = "/tmp/analysis/"
-#AAPT = "aapt"
-#AAPT = "/usr/local/bin/aapt"
+# AAPT = "aapt"
+# AAPT = "/usr/local/bin/aapt"
 
 AAPT = "/usr/bin/aapt"  # location of the aapt binary
 APICALLS = "APIcalls.txt"
 BACKSMALI = "baksmali-2.0.3.jar"  # location of the baksmali.jar file
 MODELS = "models/"
 DATASET = "dataset/"
+WORKING_DIR = "static_work_dir/"
+
+malware_goodware = {
+    "goodware": 0,
+    "malware" : 1
+}
