@@ -1,4 +1,11 @@
-import staticAnalyzer
-import sys
+import createSingleDataset
+import readDataset
+import os
 
-staticAnalyzer.run(sys.argv[1], sys.argv[2])
+pr = os.fork()
+# TODO: check for exceptions here
+if pr == 0:
+    readDataset.run()
+else:
+    cpe = os.wait()
+    createSingleDataset.merge_json_files()
