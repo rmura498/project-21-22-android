@@ -35,6 +35,3 @@ def run():
 
     analyze_apks(goodwares)
     analyze_apks(malwares, "malware")
-
-
-run()
