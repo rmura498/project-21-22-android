@@ -8,10 +8,10 @@ def find_unique(filename):
     for key in json_list:
         unsorted_dict_json.update(key)
 
-    sorted_dict = (sorted(unsorted_dict_json))
+    sorted_list = (sorted(unsorted_dict_json))
 
-    index_list = list(range(len(sorted_dict)))
-    dict_json = dict(zip(sorted_dict, index_list))
+    index_list = list(range(len(sorted_list)))
+    dict_json = dict(zip(sorted_list, index_list))
 
     return dict_json
 
