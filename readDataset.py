@@ -1,8 +1,7 @@
 import staticAnalyzer
 from os import listdir
 from os.path import isfile, join
-from settings import DATASET
-from settings import WORKING_DIR
+from settings import WORKING_DIR, DATASET
 
 from threading import Thread
 
@@ -26,6 +25,7 @@ def analyze_apks(apk_list, path="goodware"):
     # start the threads
     for thread in threads:
         thread.start()
+
 
 def run():
     goodware_path = join(DATASET, "goodware")
