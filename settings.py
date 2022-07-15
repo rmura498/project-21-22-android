@@ -40,7 +40,7 @@ MODELS = "models/"
 DATASET = "dataset/"
 WORKING_DIR = "static_work_dir/"
 
-malware_goodware = {
+SAMPLE_TYPES = {
     "goodware": 0,
     "malware" : 1
 }
