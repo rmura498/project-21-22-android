@@ -1,6 +1,6 @@
 import os
 from os.path import join
-from settings import WORKING_DIR, SAMPLE_TYPES
+from Others.settings import WORKING_DIR, SAMPLE_TYPES
 
 
 def clean_static_dir():
