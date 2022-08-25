@@ -14,12 +14,15 @@ class CDatasetProcessing():
                  dataset_path=join(DATASET, "dataset.json"),
                  labels_path=join(DATASET, "labels.json")):
         self.X = None
-        self.Y = None
+        self.y = None
 
         self._dataset_path = dataset_path
         self._labels_path = labels_path
 
-        self._dataset = load_json(self._dataset_path)
+        if os.path.isfile(self._dataset_path):
+            self._dataset = load_json(self._dataset_path)
+        else:
+            self._dataset = None
 
     @staticmethod
     def _find_apks(path):
@@ -106,6 +109,7 @@ class CDatasetProcessing():
 
         save_json(self._dataset_path, json_dataset)
         save_json(self._labels_path, labels)
+        self._dataset = load_json(self._dataset_path)
 
     def _vectorize_dataset(self):
         """
@@ -129,14 +133,17 @@ class CDatasetProcessing():
         self.y = np.array(load_json(self._labels_path))
 
     def process(self):
-        if not os.path.isfile(self._dataset_path):
+        if self._dataset is None:
             pr = os.fork()
             if pr == 0: # Child
                 self._read_dataset()
+                return 0
             else:
                 cpe = os.wait()
                 self._create_single_dataset()
                 self._vectorize_dataset()
+                return 1
+
         else:
             self._vectorize_dataset()
 

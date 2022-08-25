@@ -34,7 +34,7 @@ import ujson as json
 import uuid
 import glob
 
-import settings
+from Others import settings
 
 # global variables
 CC = ''.join(map(chr, list(range(0, 32)) + list(range(127, 160))))
