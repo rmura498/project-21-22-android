@@ -146,6 +146,7 @@ class CDatasetProcessing():
 
         else:
             self._vectorize_dataset()
+            return 1
 
 
 
