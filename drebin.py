@@ -5,12 +5,13 @@ from ApkDetectO.CClassification import CClassification
 
 def main():
     dataset_processor = CDatasetProcessing()
-    dataset_processor.process()
+    pr = dataset_processor.process()
 
-    classification = CClassification(dataset_processor.X,
-                                     dataset_processor.y)
-    classification.run()
-    # clf = joblib.load("clf.pkl")
+    if pr == 1:
+        classification = CClassification(dataset_processor.X,
+                                         dataset_processor.y)
+        classification.run()
+        # clf = joblib.load("clf.pkl")
 
 
 if __name__ == '__main__':
