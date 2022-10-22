@@ -1,9 +1,10 @@
+from sklearn.metrics import roc_curve, roc_auc_score
+import matplotlib.pyplot as plt
 from sklearn.utils import shuffle
-from sklearn.model_selection import GridSearchCV
-from sklearn.model_selection import train_test_split
-from sklearn import svm
-import numpy as np
 import joblib
+import numpy as np
+from sklearn import svm
+from sklearn.model_selection import train_test_split, GridSearchCV
 
 
 class CClassification():
@@ -48,5 +49,18 @@ class CClassification():
             print("\t\t\t%0.3f (+/-%0.03f) for %r" % (mean, std * 2, params))
 
         print("Mean test accuracy: {:.1%} +/- {:.1%}\n".format(acc.mean(), 2 * acc.std()))
+        
+        joblib.dump(self._clf.best_estimator_, "clf.pkl")
 
-        joblib.dump(clf.best_estimator_, "clf.pkl")
+    def roc_score(self):
+        y_pred = self._clf.decision_function(self._xts)
+        auc = roc_auc_score(self._yts, y_pred)
+        print('SVM AUC = %.3f' % auc)
+        fpr, tpr, _ = roc_curve(self._yts, y_pred)
+        plt.plot(fpr, tpr, marker='.', label='SVM (AUC = %0.3f)' % auc)
+        plt.title("ROC Curve")
+        plt.xlabel("False positive rate")
+        plt.ylabel("True positive rate")
+        plt.savefig("roc_curve.png")
+        plt.close()
+
