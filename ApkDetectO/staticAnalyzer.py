@@ -36,6 +36,9 @@ import glob
 
 from Others import settings
 
+from threading import Thread
+from multiprocessing import Manager
+
 # global variables
 CC = ''.join(map(chr, list(range(0, 32)) + list(range(127, 160))))
 
@@ -95,7 +98,7 @@ def closeLogFile(logFile):
 
 
 # get permissions by used API
-def checkAPIpermissions(smaliLocation):
+def checkAPIpermissions(smaliLocation, return_dict):
     with open(settings.APICALLS) as f:
         apiCallList = f.readlines()
     apiPermissions = []
@@ -128,7 +131,9 @@ def checkAPIpermissions(smaliLocation):
         except:
             # print "File " + file + " has illegal characters in its name!"
             continue
-    return (apiPermissions, apiCalls)
+    return_dict["perms"] = apiPermissions
+    return_dict["calls"] = apiCalls
+    #return (apiPermissions, apiCalls)
 
 
 # using baksmali
@@ -145,7 +150,7 @@ def dex2X(tmpDir, dexFile):
 
 # get all used activities
 # the first activity in the list is the MAIN activity
-def getActivities(sampleFile):
+def getActivities(sampleFile, return_dict):
     activities = []
     # print "into activities"
     manifest = subprocess.Popen([settings.AAPT, 'dump', 'badging', sampleFile],
@@ -191,11 +196,12 @@ def getActivities(sampleFile):
         else:
             continue
     # print activities
-    return activities
+    return_dict["appActivities"] = activities
+    #return activities
 
 
 # get intents
-def getIntents(logFile, sampleFile):
+def getIntents(logFile, sampleFile, return_dict):
     log(logFile, 0, "used intents", 0)
     appIntents = []
     xml = subprocess.Popen(
@@ -216,12 +222,13 @@ def getIntents(logFile, sampleFile):
                 continue
         else:
             continue
-    return appIntents
+    return_dict["appIntents"] = appIntents
+    #return appIntents
 
 
 # get the permissions from the manifest
 # different from the permissions when using aapt d xmltree sampleFile AndroidManifest.xml ???
-def getPermissions(logFile, sampleFile):
+def getPermissions(logFile, sampleFile, return_dict):
     appPermissions = []
     permissions = subprocess.Popen(
         [settings.AAPT, 'd', 'permissions', sampleFile],
@@ -241,11 +248,12 @@ def getPermissions(logFile, sampleFile):
         if permission != "":
             appPermissions.append(permission)
     # print appPermissions
-    return appPermissions
+    return_dict["appPermissions"] = appPermissions
+    #return appPermissions
 
 
 # get providers
-def getProviders(logFile, sampleFile):
+def getProviders(logFile, sampleFile, return_dict):
     log(logFile, 0, "used providers", 0)
     appProviders = []
     xml = subprocess.Popen(
@@ -266,11 +274,12 @@ def getProviders(logFile, sampleFile):
                 continue
         else:
             continue
-    return appProviders
+    return_dict["appProviders"] = appProviders
+    #return appProviders
 
 
 # get services and receiver
-def getServicesReceivers(logFile, sampleFile):
+def getServicesReceivers(logFile, sampleFile, return_dict):
     log(logFile, 0, "used services and receivers", 0)
     servicesANDreceiver = []
     manifest = subprocess.Popen(
@@ -305,11 +314,12 @@ def getServicesReceivers(logFile, sampleFile):
                 continue
         else:
             continue
-    return servicesANDreceiver
+    return_dict["servicesANDreceiver"] = servicesANDreceiver
+    #return servicesANDreceiver
 
 
 # parsing smali-output for suspicious content
-def parseSmaliCalls(logFile, smaliLocation):
+def parseSmaliCalls(logFile, smaliLocation, return_dict):
     log(logFile, 0, "potentially suspicious api-calls", 0)
     dangerousCalls = []
     # create file-list of directory
@@ -591,11 +601,12 @@ def parseSmaliCalls(logFile, smaliLocation):
         except:
             # print "File " + file + " has illegal characters in its name!"
             continue
-    return dangerousCalls
+    return_dict["dangerousCalls"] = dangerousCalls
+    #return dangerousCalls
 
 
 # parsing smali-output for URL's and IP's
-def parseSmaliURL(logFile, smaliLocation):
+def parseSmaliURL(logFile, smaliLocation, return_dict):
     url = []
     # create file-list of directory
     fileList = []
@@ -635,7 +646,8 @@ def parseSmaliURL(logFile, smaliLocation):
         except:
             # print "File " + file + " has illegal characters in its name!"
             continue
-    return url
+    return_dict["appUrls"] = url
+    #return url
 
 
 # unpack the sample apk-file
@@ -677,7 +689,7 @@ def createOutput(workingDir, sampleFile, appProviders, appPermissions,
 
     output = report_to_feature_vector(output)
     outpath = os.path.join(workingDir, 'results', run_id + '.json')
-    print("saving results at {}...".format(outpath))
+    print("saving results at {}...".format(outpath), flush=True)
     jsonFileName = outpath
     jsonFile = open(jsonFileName, "a+")
     jsonFile.write(json.dumps(output))
@@ -721,7 +733,6 @@ def report_to_feature_vector(report):
                     if val.strip() != '':
                         line = key_fmt(k, val)
                         output[line] = 1
-
     return output
 
 
@@ -735,15 +746,28 @@ def run(sampleFile, workingDir):
     # print "unpacking sample..."
     unpackLocation = unpackSample(workingDir, sampleFile)
     # print "get providers..."
-    appProviders = getProviders(logFile, sampleFile)
-    # # print "get permissions..."
-    appPermissions = getPermissions(logFile, sampleFile)
-    # print "get activities...",sampleFile
-    appActivities = getActivities(sampleFile)
-    # print "get intents..."
-    appIntents = getIntents(logFile, sampleFile)
-    # print "get services and receivers..."
-    servicesANDreceiver = getServicesReceivers(logFile, sampleFile)
+
+    manager = Manager()
+    return_dict = manager.dict()
+
+    t1 = Thread(target=getProviders, args=(logFile, sampleFile, return_dict,))
+    t2 = Thread(target=getPermissions, args=(logFile, sampleFile, return_dict,))
+    t3 = Thread(target=getActivities, args=(sampleFile, return_dict,))
+    t4 = Thread(target=getIntents, args=(logFile, sampleFile, return_dict,))
+    t5 = Thread(target=getServicesReceivers, args=(logFile, sampleFile, return_dict,))
+    
+    threads = [t1,t2,t3,t4,t5]
+    for thread in threads:
+        thread.start()
+
+    for thread in threads:
+        thread.join()
+
+    appProviders = return_dict["appProviders"]
+    appPermissions = return_dict["appPermissions"]
+    appActivities = return_dict["appActivities"]
+    appIntents = return_dict["appIntents"]
+    servicesANDreceiver = return_dict["servicesANDreceiver"]
 
     dangerousCalls = []
     appUrls = []
@@ -756,13 +780,23 @@ def run(sampleFile, workingDir):
         # print "decompiling sample..."
         smaliLocation = dex2X(workingDir, dex)
         # print "search for dangerous calls..."
-        dangerousCalls.extend(parseSmaliCalls(logFile, smaliLocation))
-        # print "get URLs and IPs..."
-        appUrls.extend(parseSmaliURL(logFile, smaliLocation))
-        # print "check API permissions..."
-        perms, calls = checkAPIpermissions(smaliLocation)
-        apiPermissions.extend(perms)
-        apiCalls.extend(calls)
+
+        t1 = Thread(target=parseSmaliCalls, args=(logFile, sampleFile, return_dict,))
+        t2 = Thread(target=parseSmaliURL, args=(logFile, sampleFile, return_dict,))
+        t3 = Thread(target=checkAPIpermissions, args=(smaliLocation, return_dict,))
+
+        threads = [t1,t2,t3]
+        for t in threads:
+            t.start()
+
+        for t in threads:
+            t.join()
+
+        dangerousCalls.extend(return_dict["dangerousCalls"])
+        appUrls.extend(return_dict["appUrls"])
+        apiPermissions.extend(return_dict["perms"])
+        apiCalls.extend(return_dict["calls"])
+
         # print "create json report..."
         shutil.rmtree(smaliLocation)
 
