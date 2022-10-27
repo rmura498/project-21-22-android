@@ -1,15 +1,21 @@
 import os
 from os import listdir
 from os.path import isfile, join
-from threading import Thread
+import re
 import numpy as np
+
 
 from ApkDetectO import staticAnalyzer
 from Others.settings import WORKING_DIR, DATASET, SAMPLE_TYPES
 from Others.utils import save_json, load_json
 
 
-class CDatasetProcessing():
+class CDatasetProcessing:
+    """
+    The class is responsible for processing a dataset made of .apk files. It makes
+    use of a static analyzer to check the presence of different API Calls. After
+    that static analysis it generates a vectorized dataset ready to train an ML model.
+    """
     def __init__(self,
                  dataset_path=join(DATASET, "dataset.json"),
                  labels_path=join(DATASET, "labels.json")):
@@ -26,24 +32,31 @@ class CDatasetProcessing():
 
     @staticmethod
     def _find_apks(path):
+        """
+        Looks for apk files inside a specific path.
+        :param path: the directory where the apks have to be searched
+        :return: the apk list
+        """
         apks = [f for f in listdir(path) if isfile(join(path, f)) and f.endswith(".apk")]
         return apks
 
     @staticmethod
-    def _analyze_apks(apk_list, path):
+    def _analyze_apks(apk_list):
         """
-        Create different threads, one for each apk file in the DATASET folder, to analyse it
-        with staticAnalyzer.py.
+        Statically analyze the apk files, looking for API calls etc.
         :param apk_list: the list of apks in the DATASET folder
-        :param path: or the type of apk file from which the apks come from
         :return: None
         """
-        threads = [Thread(target=staticAnalyzer.run, args=(join(DATASET, path, apk),
-                                                           join(WORKING_DIR, path, apk.replace(".apk", ""))))
-                   for apk in apk_list]
-        # start the threads
-        for thread in threads:
-            thread.start()
+        for apk in apk_list:
+            regex = r"^dataset/(\w*)/(\w*)\.apk$"
+            apk_info = re.match(regex, apk)
+            apk_type = apk_info.groups()[0]
+            apk_name = apk_info.groups()[1]
+
+            staticAnalyzer.run(
+                join(DATASET, apk_type, f"{apk_name}.apk"),
+                join(WORKING_DIR, apk_type, apk_name)
+            )
 
     def _find_unique(self):
         """
@@ -52,7 +65,6 @@ class CDatasetProcessing():
         :param dataset: json dataset loaded in memory
         :return: dictionary containing {unique feature | index}
         """
-        # json_list = load_json(filename)
         unique_features = {}
         for sample in self._dataset:
             unique_features.update(sample)
@@ -81,14 +93,24 @@ class CDatasetProcessing():
         return feature_id
 
     def _read_dataset(self):
-        samples = list(SAMPLE_TYPES.keys())
-        paths = [join(DATASET, samples[0]),
-                 join(DATASET, samples[1])]
-        for i, path in enumerate(paths):
-            apks = self._find_apks(path)
-            self._analyze_apks(apks, samples[i])
+        """
+        Reads each .apk file inside the dataset folder and sends them to the analysis.
+        :return: None
+        """
+        print("Starting to read the apk files...", flush=True)
+        apks = []
+
+        for dirpath, _, filenames in os.walk(DATASET):
+          for filename in [f for f in filenames if f.endswith(".apk")]:
+            apks.append(join(dirpath, filename))
+        self._analyze_apks(apks)
 
     def _create_single_dataset(self):
+        """
+        Creates a single dataset representation from the static analysis files.
+        :return: None
+        """
+        print("Creating a single dataset.json file from the multiple jsons...\n")
         json_dataset = []
         labels = []
 
@@ -113,10 +135,12 @@ class CDatasetProcessing():
 
     def _vectorize_dataset(self):
         """
-        Create a numpy array for the vectorized dataset
-        :param dataset: json dataset loaded in memory
+        Creates the vector representation of the dataset stored in the class' instance.
+        :return: None
         """
+        print("Vectorizing the dataset...\n")
         features = self._find_unique()
+        save_json("unique_features.json", features)
 
         n_samples = len(self._dataset)
         n_features = len(features)
@@ -130,23 +154,23 @@ class CDatasetProcessing():
                 X[i, f_id] = 1
 
         self.X = X
+        save_json("vectorized_dataset.json", self.X)
+        print(f"# of features: {len(features)}")
+        print(f"# of samples: {len(self.X)}")
         self.y = np.array(load_json(self._labels_path))
 
     def process(self):
+        """
+        Start the dataset processing routine. If the dataset file
+        has already been generated then only the vectorization
+        part is executed.
+        :return: None
+        """
         if self._dataset is None:
-            pr = os.fork()
-            if pr == 0: # Child
-                self._read_dataset()
-                return 0
-            else:
-                cpe = os.wait()
-                self._create_single_dataset()
-                self._vectorize_dataset()
-                return 1
+            self._read_dataset()
+            self._create_single_dataset()
 
-        else:
-            self._vectorize_dataset()
-            return 1
+        self._vectorize_dataset()
 
 
 
