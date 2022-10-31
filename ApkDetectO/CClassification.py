@@ -16,11 +16,13 @@ class CClassification:
     is computed as well as the ROC curve and the AUC metric, to evaluate the
     classifier's performance.
     """
+
     def __init__(self, X=None, y=None, test_size=0.2):
         self._X = X
         self._y = y
         self._clf = None
         self._estim = svm.LinearSVC(penalty="l1", dual=False)
+
 
         self._test_size = test_size
         self._xtr = None
@@ -29,6 +31,7 @@ class CClassification:
         self._yts = None
 
     def _shuffle_split(self):
+
         '''
         Shuffles and splits the dataset into train and test set.
         :return: None
@@ -71,6 +74,7 @@ class CClassification:
         plt.savefig("roc_curve.png")
         plt.close()
 
+
     def predict_and_evaluate(self):
         """
         Performs a prediction using the test set to compute the
@@ -104,4 +108,4 @@ class CClassification:
         self.fit_model()
         self.predict_and_evaluate()
         self.save_model()
-
+        
