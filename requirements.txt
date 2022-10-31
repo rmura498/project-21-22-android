@@ -28,3 +28,5 @@ virtualenv==15.1.0
 wcwidth==0.1.7
 numpy==1.23
 sklearn
+joblib
+matplotlib
